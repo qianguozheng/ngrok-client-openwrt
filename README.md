@@ -1,6 +1,19 @@
 # ngrok-client-openwrt
 Ngrok Client for openwrt package
 
+Usage:
+	
+	$cd openwrt/package/utils
+	$git clone https://github.com/qianguozheng/ngrok-client-openwrt.git
+	$cd openwrt/
+	$make menuconfig 
+	
+		Utilities
+		 ---HiWeeds
+			--- ngrok
+			
+	$make package/utils/ngrok-client-openwrt/compile V=s
+	
 Remote Debugging
 ---
 For openwrt users, maybe need to modify config or do some operations outside of NAT,
@@ -11,7 +24,7 @@ the easy way is to use *ngrok*,
 	
 From above you can see the simple Arch of each role in this program.
 
-I have setup a server on ![hiweeds.net](hiweeds.net).
+I have setup a server on [hiweeds.net](hiweeds.net).
 
 ###On Server:
 	
@@ -35,6 +48,7 @@ Do as above, you can get access to any service your openwrt provide on local.
 
 Base on: https://github.com/dosgo/ngrok-c.git
 
-Contact Me: guozhengqian0825@126.com [AliPay]
 If you found useful, donate will be appreciate. 
+Contact Me: guozhengqian0825@126.com [AliPay]
+
 

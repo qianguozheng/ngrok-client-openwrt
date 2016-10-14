@@ -20,7 +20,7 @@ PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 include $(INCLUDE_DIR)/package.mk
 
 define Package/ngrok
-	SUBMENU:=MagicWiFi
+	SUBMENU:=HiWeeds
 	SECTION:=utils
 	CATEGORY:=Utilities
 	TITLE:=yong da applications
