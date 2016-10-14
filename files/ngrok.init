@@ -1,0 +1,13 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2006-2011 OpenWrt.org
+
+START=13
+STOP=13
+
+USE_PROCD=1
+PROG=/usr/sbin/ngrokc
+
+start() {
+	/usr/sbin/ngrokc -SER[Shost:hiweeds.net,Sport:4443] -AddTun[Type:tcp,Lhost:127.0.0.1,Lport:22,Rport:8022]
+}
+
