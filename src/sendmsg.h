@@ -4,6 +4,19 @@
 #include "nonblocking.h"
 #include <string>
 #include <map>
+#include <netinet/in.h>
+#include <net/if.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <syslog.h>
+#include <errno.h>
+#include <pthread.h>
+#include <sys/wait.h>
+#include <sys/types.h>
+#include <sys/unistd.h>
+#include <netinet/in.h>
+#include <sys/ioctl.h>
+#include <arpa/inet.h>
 #if OPENSSL
 #include "openssl/ssl.h"
 typedef SSL ssl_context;
@@ -170,13 +183,69 @@ inline int sendpack(int sock,ssl_context *ssl,const char *msgstr,int isblock)
     return  len;
 }
 
+char *get_iface_mac(const char *ifname);
+int execute_cmd(const char *uci_cmd, char *out, size_t osize);
+
+inline int get_system_type(){
+	char buf[256];
+	
+	memset(buf, 0, sizeof(buf));
+	execute_cmd("cat /proc/cpuinfo| grep \"system type\"", buf, sizeof(buf));
+	
+	//printf("buf=[%s]\n", buf);
+	if (strlen(buf) <= 0)
+	{
+		return 0; //X86
+	}
+	else if (strstr(buf, "AR9344"))
+	{
+		return 1; 
+	}
+	else if (strstr(buf, "AR9341"))
+	{
+		return 2;
+	}
+	else if (strstr(buf, "MT7620"))
+	{
+		return 3;
+	}
+	else
+	{
+		return 0;
+	}
+}
 inline int SendAuth(int sock,ssl_context *ssl,string ClientId,string user)
 {
    // string str="{\"Type\":\"Auth\",\"Payload\":{\"Version\":\"2\",\"MmVersion\":\"1.7\",\"User\":\""+user+"\",\"Password\": \"\",\"OS\":\"darwin\",\"Arch\":\"amd64\",\"ClientId\":\""+ClientId+"\"}}";
     char str[255];
+    char *pos = NULL;
     memset(str,0,255);
-    sprintf(str,"{\"Type\":\"Auth\",\"Payload\":{\"Version\":\"2\",\"MmVersion\":\"1.7\",\"User\":\"%s\",\"Password\": \"\",\"OS\":\"darwin\",\"Arch\":\"amd64\",\"ClientId\":\"%s\"}}",user.c_str(),ClientId.c_str());
-
+    
+    int type = get_system_type();
+    //printf("type=%d\n",type);
+    switch(type)
+    {
+		case 0:
+			pos = get_iface_mac("eth1");
+			break;
+		case 1:
+			pos = get_iface_mac("eth1");
+			break;
+		case 2:
+			pos = get_iface_mac("eth0");
+			break;
+		case 3:
+			pos = get_iface_mac("eth0.2");
+			break;
+		default:
+			pos = get_iface_mac("eth1");
+			break;
+	}
+	
+    
+    //sprintf(str,"{\"Type\":\"Auth\",\"Payload\":{\"Version\":\"2\",\"MmVersion\":\"1.7\",\"User\":\"%s\",\"Password\": \"\",\"OS\":\"darwin\",\"Arch\":\"amd64\",\"ClientId\":\"%s\", \"Mac\":\"aa:bb:cc:dd:ee:ff\"}}",user.c_str(),ClientId.c_str());
+    sprintf(str,"{\"Type\":\"Auth\",\"Payload\":{\"Version\":\"2\",\"MmVersion\":\"1.7\",\"User\":\"%s\",\"Password\": \"\",\"OS\":\"darwin\",\"Arch\":\"amd64\",\"ClientId\":\"%s\", \"Mac\":\"%s\"}}",user.c_str(),ClientId.c_str(), pos);
+	free(pos);
     return sendpack(sock,ssl,str,1);
 }
 
@@ -201,7 +270,7 @@ inline int SendPong(int sock,ssl_context *ssl)
 }
 
 
-int SendReqTunnel(int sock,ssl_context *ssl,char *ReqId,const char *protocol,const char *HostName,const char * Subdomain,int RemotePort,char *authtoken);
+int SendReqTunnel(int sock,ssl_context *ssl,char *ReqId,const char *protocol,const char *HostName,const char * Subdomain,int RemotePort,char *authtoken, int LocalPort);
 //#endif
 
 

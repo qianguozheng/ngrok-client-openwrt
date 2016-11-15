@@ -265,9 +265,9 @@ void* proxy(  )
                         memset(ReqId,0,20);
                         memset(tunnelinfo->ReqId,0,20);
                         #if OPENSSL
-                        SendReqTunnel(mainsock,mainsslinfo->ssl,ReqId,tunnelinfo->protocol,tunnelinfo->hostname,tunnelinfo->subdomain, tunnelinfo->remoteport ,authtoken);
+                        SendReqTunnel(mainsock,mainsslinfo->ssl,ReqId,tunnelinfo->protocol,tunnelinfo->hostname,tunnelinfo->subdomain, tunnelinfo->remoteport ,authtoken, tunnelinfo->localport);
                         #else
-                        SendReqTunnel(mainsock,&mainsslinfo->ssl,ReqId,tunnelinfo->protocol,tunnelinfo->hostname,tunnelinfo->subdomain, tunnelinfo->remoteport,authtoken );
+                        SendReqTunnel(mainsock,&mainsslinfo->ssl,ReqId,tunnelinfo->protocol,tunnelinfo->hostname,tunnelinfo->subdomain, tunnelinfo->remoteport,authtoken , tunnelinfo->localport);
                         #endif
                         //copy
                         memcpy(tunnelinfo->ReqId,ReqId,strlen(ReqId));

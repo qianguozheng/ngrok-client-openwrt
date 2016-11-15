@@ -25,14 +25,14 @@ char *rand_str(char *str,const int len)
 
 
 
-int SendReqTunnel(int sock,ssl_context *ssl,char *ReqId,const char *protocol,const char * HostName,const char * Subdomain,int RemotePort,char *authtoken)
+int SendReqTunnel(int sock,ssl_context *ssl,char *ReqId,const char *protocol,const char * HostName,const char * Subdomain,int RemotePort,char *authtoken, int LocalPort)
 {
     char guid[20]={0};
     rand_str(guid,5);
     char str[1024];
     memset(str,0,1024);
     memcpy(ReqId,guid,strlen(guid));//copy
-    sprintf(str,"{\"Type\":\"ReqTunnel\",\"Payload\":{\"Protocol\":\"%s\",\"ReqId\":\"%s\",\"Hostname\": \"%s\",\"Subdomain\":\"%s\",\"HttpAuth\":\"\",\"RemotePort\":%d,\"authtoken\":\"%s\"}}",protocol,guid,HostName,Subdomain,RemotePort,authtoken);
+    sprintf(str,"{\"Type\":\"ReqTunnel\",\"Payload\":{\"Protocol\":\"%s\",\"ReqId\":\"%s\",\"Hostname\": \"%s\",\"Subdomain\":\"%s\",\"HttpAuth\":\"\",\"RemotePort\":%d,\"authtoken\":\"%s\", \"LocalPort\":%d}}",protocol,guid,HostName,Subdomain,RemotePort,authtoken,LocalPort);
     return sendpack(sock,ssl,str,1);
 }
 
@@ -143,3 +143,66 @@ int loadargs( int argc, char **argv ,list<TunnelInfo*>*tunnellist,char *s_name,i
 }
 
 
+char *get_iface_mac(const char *ifname)
+{
+	int r, s;
+	struct ifreq ifr;
+	char *hwaddr, mac[18];
+
+	//printf("ifname=%s\n", ifname);
+	
+	strcpy(ifr.ifr_name, ifname);
+
+	s = socket(PF_INET, SOCK_DGRAM, 0);
+	if (-1 == s) {
+		printf("get_iface_mac socket: %s", strerror(errno));
+		return NULL;
+	}
+
+	r = ioctl(s, SIOCGIFHWADDR, &ifr);
+	if (r == -1) {
+		printf("get_iface_mac ioctl(SIOCGIFHWADDR): %s", strerror(errno));
+		close(s);
+		return NULL;
+	}
+
+	hwaddr = ifr.ifr_hwaddr.sa_data;
+	close(s);
+	
+	#if 1
+	snprintf(mac, sizeof(mac), "%02X:%02X:%02X:%02X:%02X:%02X", 
+			hwaddr[0] & 0xFF,
+			hwaddr[1] & 0xFF,
+			hwaddr[2] & 0xFF,
+			hwaddr[3] & 0xFF,
+			hwaddr[4] & 0xFF,
+			hwaddr[5] & 0xFF
+		);
+    #endif
+	
+	
+	return strdup(mac);
+}
+
+int execute_cmd(const char *uci_cmd, char *out, size_t osize)
+{
+	FILE *fp = NULL;
+	int ret = -1;
+	*out = 0;
+	
+	fp = popen(uci_cmd, "r");
+	if (!fp) {
+		printf("uci cmd %s error!", uci_cmd);
+		return -1;
+	}
+
+	fgets(out, osize-1, fp);
+	if (0 != out[0]) {  // not empty
+		//out[osize-1] = 0;
+		out[strlen(out)-1] = '\0';
+		ret = 0;
+	}
+
+	pclose(fp);
+	return ret;
+}
